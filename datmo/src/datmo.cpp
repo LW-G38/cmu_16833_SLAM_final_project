@@ -43,6 +43,9 @@ Datmo::Datmo(){
   n_private.param("max_cluster_size", max_cluster_size, 360);
   n_private.param("euclidean_distance", euclidean_distance, 0.25);
   n_private.param("pub_markers", p_marker_pub, false);
+  // 16833: added velocity and wall thresohold
+  n_private.param("threshold_velocity", vth, 0.5);
+  n_private.param("wall_velocity", wth, 10);
 
   pub_tracks_box_kf     = n.advertise<datmo::TrackArray>("datmo/box_kf", 10);
   pub_marker_array   = n.advertise<visualization_msgs::MarkerArray>("datmo/marker_array", 10);
@@ -169,14 +172,33 @@ void Datmo::callback(const sensor_msgs::LaserScan::ConstPtr& scan_in){
     for (unsigned int i =0; i<clusters.size();i++){
 
       track_array_box_kf.tracks.push_back(clusters[i].msg_track_box_kf);
-     
+      double vel = sqrt(pow(clusters[i].cvx, 2) + pow(clusters[i].cvy, 2));
+      double shape = std::max(clusters[i].length_box, clusters[i].width_box) / std::min(clusters[i].length_box, clusters[i].width_box);
+
+      if (vel >= vth) {
+          p_marker_pub = 1;
+          // ROS_INFO("calculated velocity: %f\n", vel);
+        } else {
+          p_marker_pub = 0;
+        }
+      
+      if (shape <= 10) {
+      	  p_marker_pub = 1;
+        }  else {
+      	  p_marker_pub = 0;
+      	  // ROS_INFO("wall shape: %f\n", shape);
+        }
+      if (vel >= vth && shape >= wth) {
+      	  ROS_INFO("We filtered the wall!");
+      }
+      if (vel >= vth && shape <= wth) {
+      	  ROS_INFO("box size: %f; box velocity: %f\n", shape, vel);
+      }
       if (p_marker_pub){
         marker_array.markers.push_back(clusters[i].getClosestCornerPointVisualisationMessage());
         marker_array.markers.push_back(clusters[i].getBoundingBoxCenterVisualisationMessage());
-        double vel = sqrt(pow(clusters[i].cvx, 2) + pow(clusters[i].cvy, 2))
-        if (vel >= 1000) {
-          marker_array.markers.push_back(clusters[i].getArrowVisualisationMessage());
-        }
+
+        marker_array.markers.push_back(clusters[i].getArrowVisualisationMessage());
         marker_array.markers.push_back(clusters[i].getThetaL1VisualisationMessage());
         marker_array.markers.push_back(clusters[i].getThetaL2VisualisationMessage());
         marker_array.markers.push_back(clusters[i].getThetaBoxVisualisationMessage());

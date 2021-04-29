@@ -88,6 +88,8 @@ private:
 
   //Parameters
   double dth;
+  double vth; // 16833: added velocity threshold
+  double wth; // 16833: added wall threshold
   double euclidean_distance;
   int max_cluster_size;
   bool p_marker_pub;

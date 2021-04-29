@@ -1,11 +1,12 @@
  <launch>
 
  <node pkg="datmo" type="datmo" name="datmo" output="screen">
-  <param name="lidar_frame" value="laser" />
-  <param name="world_frame" value="laser" />
-  <param name="threshold_distance" value="0.2" />
-  <param name="euclidean_distance" value="0.25" />
+  <param name="lidar_frame" value="base_scan" />
+  <param name="world_frame" value="map" />
+  <param name="threshold_distance" value="0.07" />
+  <param name="euclidean_distance" value="0.45" />
   <param name="pub_markers" value="true" />
+  <param name="threshold_velocity" value="0.35" />
  </node>
     
 </launch>
